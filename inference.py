@@ -501,10 +501,12 @@ class JointParticleFilter:
             # check the truedistance of a particle ghost with its respective
             # emission model
             for i in range(self.numGhosts):
-                model = emissionModels[i]
-                gPos = p[i]
-                trueDistance = util.manhattanDistance(gPos, pacmanPosition)
-                prob *= model[trueDistance]
+                # we know that our ghost is in jail, so there's no probability factor
+                if i not in jailghosts:
+                    model = emissionModels[i]
+                    gPos = p[i]
+                    trueDistance = util.manhattanDistance(gPos, pacmanPosition)
+                    prob *= model[trueDistance]
 
             # add this probability to the overall particle table
             tempCounter[p] += prob
@@ -514,7 +516,7 @@ class JointParticleFilter:
 
 
         # resample
-        if self.beliefs.totalCount() == 0:
+        if tempCounter.totalCount() == 0:
             self.initializeParticles()
         else:
             self.beliefs.normalize()
