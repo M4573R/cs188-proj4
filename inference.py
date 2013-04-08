@@ -251,6 +251,20 @@ class ParticleFilter(InferenceModule):
             and will produce errors
         """
         "*** YOUR CODE HERE ***"
+        n = self.numParticles
+        legal = self.legalPositions
+        uniformInit = []
+        #this function keeps adding particles into the list until we've eclipsed the number of particles we want.
+        while n > 0:
+            # create a particle for each position, reduce n
+            if n > len(legal):
+                uniformInit += legal
+                n -= len(legal)
+            else:
+                uniformInit += legal[0:n-1]
+                n = 0
+
+        self.particles = uniformInit
 
     def observe(self, observation, gameState):
         """
@@ -280,12 +294,31 @@ class ParticleFilter(InferenceModule):
         You may also want to use util.manhattanDistance to calculate the distance
         between a particle and pacman's position.
         """
-
         noisyDistance = observation
         emissionModel = busters.getObservationDistribution(noisyDistance)
         pacmanPosition = gameState.getPacmanPosition()
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        if noisyDistance == None:
+            jailCounter = util.Counter()
+            jailCounter[self.getJailPosition()] = 1.0
+            self.beliefs = jailCounter
+        else:        
+            tempCounter = util.Counter()
+            for p in self.particles:
+                trueDistance = util.manhattanDistance(p, pacmanPosition)
+                tempCounter[p] += emissionModel[trueDistance] 
+            self.beliefs = tempCounter
+        
+        if self.beliefs.totalCount() == 0:
+            self.initializeUniformly(gameState)
+        else:
+            self.beliefs.normalize()
+            for i in range(len(self.particles)):
+                newPos = util.sample(self.beliefs)
+                self.particles[i] = newPos
+
+       
+
 
     def elapseTime(self, gameState):
         """
@@ -302,8 +335,12 @@ class ParticleFilter(InferenceModule):
         util.sample(Counter object) is a helper method to generate a sample from a
         belief distribution
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+
+        for i in range(len(self.particles)):
+            p = self.particles[i]
+            newPosDist = self.getPositionDistribution(self.setGhostPosition(gameState, p))
+            self.particles[i] = util.sample(newPosDist)
+        
 
     def getBeliefDistribution(self):
         """
@@ -311,8 +348,12 @@ class ParticleFilter(InferenceModule):
           ghost locations conditioned on all evidence and time passage. This method
           essentially converts a list of particles into a belief distribution (a Counter object)
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        beliefDist = util.Counter()
+        for p in self.particles:
+            beliefDist[p] += 1
+        
+        beliefDist.normalize()
+        return beliefDist
 
 class MarginalInference(InferenceModule):
     "A wrapper around the JointInference module that returns marginal beliefs about ghosts."
