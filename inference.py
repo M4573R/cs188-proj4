@@ -421,7 +421,7 @@ class JointParticleFilter:
         import itertools
         import random
         #create a list of possible ghost permutations, where each of three ghosts can be on any of the legal positions in the boards.
-        permutations = list(itertools.product(self.legalPositions, repeat=3))
+        permutations = list(itertools.product(self.legalPositions, repeat=self.numGhosts))
         
         random.shuffle(permutations)
         p = len(permutations)
@@ -569,13 +569,22 @@ class JointParticleFilter:
               The ghost agent you are meant to supply is self.ghostAgents[ghostIndex-1],
               but in this project all ghost agents are always the same.
         """
+
         newParticles = []
         for oldParticle in self.particles:
             newParticle = list(oldParticle) # A list of ghost positions
 
             # now loop through and update each entry in newParticle...
+            "*** START CODE ***"
+            prevGhostPositions = list(oldParticle)
+        
 
-            "*** YOUR CODE HERE ***"
+            #for every ghost in this particle
+            for i in range(self.numGhosts):
+                newPosDist = getPositionDistributionForGhost(setGhostPositions(gameState, prevGhostPositions),
+                                                       i, self.ghostAgents[i])
+                newParticle[i] = util.sample(newPosDist)
+
 
             "*** END YOUR CODE HERE ***"
             newParticles.append(tuple(newParticle))
