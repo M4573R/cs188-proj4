@@ -145,6 +145,7 @@ class GreedyBustersAgent(BustersAgent):
              gameState.getLivingGhosts() list.
 
         """
+        #solution is probably computationally inefficient, but it works.
         pacmanPosition = gameState.getPacmanPosition()
         legal = [a for a in gameState.getLegalPacmanActions()]
         livingGhosts = gameState.getLivingGhosts()
